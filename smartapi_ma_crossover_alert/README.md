@@ -1,65 +1,139 @@
-# SmartAPI MA Crossover Alert
+# 📈 SmartAPI MA Crossover Alert Bot
 
-This project monitors stock prices using Angel One's SmartAPI and sends Telegram alerts when a bullish Moving Average (MA) crossover occurs on 5-minute candles.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
+![AngelOne](https://img.shields.io/badge/AngelOne-SmartAPI-red?style=for-the-badge)
+![Telegram](https://img.shields.io/badge/Telegram-Alerts-2CA5E0?style=for-the-badge&logo=telegram)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-## Features
-- **SmartAPI Integration**: Authenticates securely using TOTP.
-- **Technical Analysis**: Calculates SMA 9 and SMA 20.
-- **Alert System**: Detects Bullish Crossover (MA9 > MA20) and sends Telegram notifications.
-- **Scheduler**: Runs automatically every 5 minutes during market hours.
-- **Duplicate Prevention**: Ensures alerts are sent only once per crossover event.
+A professional trading bot that monitors real-time market data from **Angel One SmartAPI**, detects Moving Average (MA) crossovers on 5-minute candles, and sends instant alerts to Telegram. It strictly filters for **Confirmed Crossovers** (candle close) to ensure high-quality signals (No Repainting).
 
-## Prerequisites
+---
+
+## ✨ Features
+
+- **🚀 Bullish Crossover Alerts**: Triggers when MA9 crosses **ABOVE** MA20.
+- **🔴 Bearish Crossover Alerts**: Triggers when MA9 crosses **BELOW** MA20.
+- **✅ Verified Signals**: Logic waits for the candle to CLOSE before alerting. No "forming" candle alerts.
+- **🔄 Multi-Alert System**: Sends alerts for *every* new crossover throughout the day.
+- **🛡️ Secure**: Environment-based configuration to keep your credentials safe.
+- **☁️ Cloud Ready**: Optimized for deployment on PythonAnywhere.
+
+---
+
+## 🧠 Logic & Strategy
+
+The bot runs every 5 minutes and performs the following checks:
+
+### 1. Bullish Crossover (BUY Signal)
+Occurs when the short-term trend (MA9) overtakes the long-term trend (MA20).
+
+```mermaid
+graph LR
+    A[Market Data 5-min] --> B{Check Previous Candle Close}
+    B -->|Yes| C[Was MA9 <= MA20?]
+    C -->|Yes| D[Is MA9 > MA20?]
+    D -->|Yes| E[🚀 SEND BULLISH ALERT]
+    D -->|No| F[No Action]
+```
+
+### 2. Bearish Crossover (SELL Signal)
+Occurs when the short-term trend (MA9) falls below the long-term trend (MA20).
+
+```mermaid
+graph LR
+    A[Market Data 5-min] --> B{Check Previous Candle Close}
+    B -->|Yes| C[Was MA9 >= MA20?]
+    C -->|Yes| D[Is MA9 < MA20?]
+    D -->|Yes| E[🔴 SEND BEARISH ALERT]
+    D -->|No| F[No Action]
+```
+
+### 3. Confirmed Candle Logic
+To prevent false signals from "repainting" (where a crossover happens during the candle but disappears before close), the bot **ignores the current forming candle** and analyzes the last completed candle.
+
+---
+
+## 🚀 Installation & Setup
+
+### Prerequisites
 - Python 3.8+
-- Angel One SmartAPI Account
+- Angel One SmartAPI Credentials
 - Telegram Bot Token & Chat ID
 
-## Installation
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/smartapi_ma_crossover_alert.git
+cd smartapi_ma_crossover_alert
+```
 
-1. **Clone the repository** (or navigate to the folder):
-   ```bash
-   cd smartapi_ma_crossover_alert
-   ```
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 3. Secure Configuration
+Create a `.env` file in the root directory. **NEVER share this file.**
 
-3. **Configure Environment Variables**:
-   - Rename `.env.example` to `.env`.
-   - Edit `.env` and fill in your details:
-     ```ini
-     SMARTAPI_API_KEY=your_api_key
-     SMARTAPI_CLIENT_ID=your_client_id
-     SMARTAPI_PASSWORD=your_password
-     SMARTAPI_TOTP_SECRET=your_totp_secret
-     TELEGRAM_BOT_TOKEN=your_bot_token
-     TELEGRAM_CHAT_ID=your_chat_id
-     ```
+```ini
+SMARTAPI_API_KEY=your_api_key
+SMARTAPI_CLIENT_ID=your_client_id
+SMARTAPI_PASSWORD=your_password
+SMARTAPI_TOTP_SECRET=your_totp_secret
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+# Optional: Set to 'True' to run once and exit (for cron jobs)
+# RUN_ONCE=False 
+```
 
-## Usage
-
-Run the main script:
+### 4. Run the Bot
 ```bash
 python main.py
 ```
 
-The script will:
-1. Log in to SmartAPI.
-2. Fetch historical data for configured symbols.
-3. Check for crossovers.
-4. Send alerts if conditions are met.
-5. Repeat every 5 minutes.
+---
 
-## Configuration
-- **Symbols**: Update the `SYMBOLS_MAP` in `main.py` with the stock tokens you want to monitor. You can find tokens in the Angel One instrument list.
+## ☁️ Deployment
 
-## Logic
-- **Bullish Crossover**:
-  - Previous Candle: MA9 <= MA20
-  - Current Candle: MA9 > MA20
-- **Timeframe**: 5 Minutes
+### PythonAnywhere
+This project is configured for seamless deployment on PythonAnywhere.
 
-## Disclaimer
-This software is for educational purposes only. Do not use it for live trading without proper testing and risk management.
+1.  **Upload Code**: Use the Files tab to upload all `.py` files and `requirements.txt`.
+2.  **Environment**: Create a virtualenv and install requirements.
+3.  **Secrets**: Create the `.env` file on the server.
+4.  **Task**: Set up an "Always-on Task" for continuous monitoring.
+
+See [PA_DEPLOY.md](PA_DEPLOY.md) for a detailed step-by-step guide.
+
+---
+
+## 🔒 Security Best Practices
+
+> [!IMPORTANT]
+> **Your API Keys are your money.** Follow these rules:
+
+1.  **Never commit `.env` to GitHub.** Use `.gitignore`.
+2.  **Rotate Keys**: If you suspect a leak, regenerate your API keys immediately.
+3.  **Use Environment Variables**: The code uses `python-dotenv` to load secrets securely from the environment.
+
+---
+
+## 🛠️ Project Structure
+
+```
+smartapi_ma_crossover_alert/
+├── main.py              # Core logic and scheduler
+├── indicators.py        # MA calculation & crossover detection
+├── smartapi_client.py   # Angel One API wrapper
+├── telegram_alerts.py   # Telegram notification system
+├── config.py            # Configuration loader
+├── utils.py             # Logging and time helpers
+├── .env                 # Secrets (NOT TRACKED)
+├── .gitignore           # Security rules
+└── requirements.txt     # Dependencies
+```
+
+---
+
+## 📜 License
+
+MIT License. Use at your own risk. This bot provides information, not financial advice.

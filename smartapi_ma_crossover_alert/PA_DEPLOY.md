@@ -23,7 +23,8 @@ This guide explains how to deploy your trading bot on [PythonAnywhere](https://w
     *   `utils.py`
     *   `config.py`
     *   `requirements.txt`
-    *   `.env` (Make sure this contains your actual credentials)
+    *   `requirements.txt`
+    *   **Do NOT upload your local `.env` if it has real keys.** Create a new one on the server securely.
 
 ## Step 2: Set Up Virtual Environment
 
