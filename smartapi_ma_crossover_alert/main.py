@@ -169,19 +169,26 @@ def run_historical_test(client):
             prev['MA9'], prev['MA20'],
             curr['MA9'], curr['MA20']
         )
+        is_bearish = detect_bearish_crossover(
+            prev['MA9'], prev['MA20'],
+            curr['MA9'], curr['MA20']
+        )
         
-        if is_bullish:
+        if is_bullish or is_bearish:
             timestamp = curr['timestamp']
             close_price = curr['close']
             
-            logger.info(f"Found historical crossover at {timestamp}")
+            type_str = "BULLISH" if is_bullish else "BEARISH"
+            desc_str = "MA9 crossed ABOVE MA20" if is_bullish else "MA9 crossed BELOW MA20"
+            
+            logger.info(f"Found historical {type_str} crossover at {timestamp}")
             
             message = (
-                f"🧪 **[TEST/HISTORICAL] BULLISH CROSSOVER FOUND**\n\n"
+                f"🧪 **[TEST/HISTORICAL] {type_str} CROSSOVER FOUND**\n\n"
                 f"Symbol: {symbol_name}\n"
                 f"Time: {timestamp} (IST)\n"
                 f"Price: {close_price}\n"
-                f"MA9 crossed ABOVE MA20\n\n"
+                f"{desc_str}\n\n"
                 f"This is a test of the alert system based on past data."
             )
             
@@ -190,7 +197,7 @@ def run_historical_test(client):
             break
             
     if not found:
-        logger.info("No bullish crossover found in the last 10 days.")
+        logger.info("No crossover found in the last 10 days.")
 
 def main():
     logger.info("Initializing SmartAPI MA Crossover Alert System...")
