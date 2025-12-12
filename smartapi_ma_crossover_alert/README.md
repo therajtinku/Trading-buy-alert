@@ -90,6 +90,16 @@ TELEGRAM_CHAT_ID=your_chat_id
 python main.py
 ```
 
+### 5. Command Line Options / Modes
+
+The bot supports different modes for testing and scheduling.
+
+| Command | Description | Alert Behavior |
+| :--- | :--- | :--- |
+| `python main.py` | **Standard Mode**: Runs continuously every 5 minutes. | Sends alerts for real-time crossovers. |
+| `python main.py --once` | **Single Run Mode**: Runs the scan *once* immediately and exits. Useful for cron jobs. | Sends an alert if a crossover is detected *right now*. |
+| `python main.py --test-history` | ** Historical Test Mode**: Fetches past 10 days of data and simulates the confirmation logic. | **SENDS A TEST ALERT** 🧪 to Telegram if a historical crossover is found. Use this to verify your Telegram connection. |
+
 ---
 
 ## ☁️ Deployment
