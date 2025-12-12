@@ -24,29 +24,29 @@ A professional trading bot that monitors real-time market data from **Angel One 
 
 The bot runs every 5 minutes and performs the following checks:
 
-### 1. Bullish Crossover (BUY Signal)
-Occurs when the short-term trend (MA9) overtakes the long-term trend (MA20).
+### Unified Crossover Logic
+
+The bot analyzes the **Confirmed (Closed) Candle** to detect trend reversals based on the movement of the Short-Term MA (9) relative to the Long-Term MA (20).
 
 ```mermaid
-graph LR
-    A[Market Data 5-min] --> B{Check Previous Candle Close}
-    B -->|Yes| C[Was MA9 <= MA20?]
-    C -->|Yes| D[Is MA9 > MA20?]
-    D -->|Yes| E[🚀 SEND BULLISH ALERT]
-    D -->|No| F[No Action]
+graph TD
+    Start[Start: Every 5 Mins] -->|Fetch Data| Check{Is Last Candle Closed?}
+    Check -- No (Forming) --> Wait[Ignore & Wait]
+    Check -- Yes --> Prev{Check Previous State}
+    
+    %% Bullish Path
+    Prev -- "Prev MA9 ≤ MA20" --> BullCheck{Current MA9 > MA20?}
+    BullCheck -- Yes --> BullAlert[🚀 SEND BULLISH ALERT]
+    BullCheck -- No --> NoAct[No Action]
+
+    %% Bearish Path
+    Prev -- "Prev MA9 ≥ MA20" --> BearCheck{Current MA9 < MA20?}
+    BearCheck -- Yes --> BearAlert[🔴 SEND BEARISH ALERT]
+    BearCheck -- No --> NoAct
 ```
 
-### 2. Bearish Crossover (SELL Signal)
-Occurs when the short-term trend (MA9) falls below the long-term trend (MA20).
-
-```mermaid
-graph LR
-    A[Market Data 5-min] --> B{Check Previous Candle Close}
-    B -->|Yes| C[Was MA9 >= MA20?]
-    C -->|Yes| D[Is MA9 < MA20?]
-    D -->|Yes| E[🔴 SEND BEARISH ALERT]
-    D -->|No| F[No Action]
-```
+- **Bullish 🚀**: Detects when the MA9, having been below, crosses **ABOVE** the MA20.
+- **Bearish 🔴**: Detects when the MA9, having been above, crosses **BELOW** the MA20.
 
 ### 3. Confirmed Candle Logic
 To prevent false signals from "repainting" (where a crossover happens during the candle but disappears before close), the bot **ignores the current forming candle** and analyzes the last completed candle.
