@@ -11,7 +11,7 @@ class SmartApiClient:
     def __init__(self):
         self.api_key = Config.SMARTAPI_API_KEY
         self.client_id = Config.SMARTAPI_CLIENT_ID
-        self.password = Config.SMARTAPI_PASSWORD
+        self.mpin = Config.SMARTAPI_MPIN
         self.totp_secret = Config.SMARTAPI_TOTP_SECRET
         self.smart_api = None
         self.session = None
@@ -23,7 +23,7 @@ class SmartApiClient:
         try:
             self.smart_api = SmartConnect(api_key=self.api_key)
             totp = pyotp.TOTP(self.totp_secret).now()
-            data = self.smart_api.generateSession(self.client_id, self.password, totp)
+            data = self.smart_api.generateSession(self.client_id, self.mpin, totp)
             
             if data['status']:
                 self.session = data['data']
@@ -36,10 +36,9 @@ class SmartApiClient:
             logger.error(f"Error during SmartAPI login: {e}")
             return False
 
-    def get_5min_candles(self, symbol_token, exchange="NSE", count=50):
+    def get_5min_candles(self, symbol_token, exchange="NSE", days=5):
         """
-        Fetches the last 'count' 5-minute candles for a given symbol.
-        Note: SmartAPI requires specific token and exchange.
+        Fetches 5-minute candles for the last 'days'.
         """
         if not self.smart_api:
             logger.error("API not initialized. Call login() first.")
@@ -47,7 +46,7 @@ class SmartApiClient:
 
         # Calculate time range
         to_date = datetime.now()
-        from_date = to_date - timedelta(days=5) # Fetch enough history for 50 candles
+        from_date = to_date - timedelta(days=days)
         
         try:
             historicParam = {
@@ -59,6 +58,7 @@ class SmartApiClient:
             }
             
             data = self.smart_api.getCandleData(historicParam)
+            logger.info(f"SmartAPI Response: {data}")
             
             if data and 'data' in data:
                 # SmartAPI returns: [timestamp, open, high, low, close, volume]
@@ -66,8 +66,8 @@ class SmartApiClient:
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 df['close'] = df['close'].astype(float)
                 
-                # Return last 'count' rows
-                return df.tail(count).reset_index(drop=True)
+                # Return all rows
+                return df
             else:
                 logger.warning(f"No data fetched for token {symbol_token}")
                 return None

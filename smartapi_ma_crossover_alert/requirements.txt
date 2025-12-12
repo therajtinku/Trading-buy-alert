@@ -6,3 +6,5 @@ numpy
 pyotp
 pytz
 schedule
+logzero
+websocket-client

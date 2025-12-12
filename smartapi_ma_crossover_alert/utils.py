@@ -2,12 +2,17 @@ import logging
 import pytz
 from datetime import datetime
 
+import os
+
 # Configure Logging
+basedir = os.path.abspath(os.path.dirname(__file__))
+log_path = os.path.join(basedir, "app.log")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("app.log"),
+        logging.FileHandler(log_path),
         logging.StreamHandler()
     ]
 )
