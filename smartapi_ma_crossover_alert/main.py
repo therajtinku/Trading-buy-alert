@@ -137,6 +137,21 @@ def job(client):
                     else:
                         logger.info(f"Duplicate alert suppressed for {symbol_name} at {timestamp}")
             
+        except RuntimeError as re:
+            logger.error(f"RuntimeError processing {symbol_name}: {re}")
+            # Check for session issues
+            if "Session" in str(re) or "Authorization" in str(re):
+                logger.warning("Session appears invalid. Attempting re-login...")
+                if client.login():
+                    logger.info("Re-login successful. Continuing...")
+                else:
+                    logger.critical("Re-login failed. Exiting script to force restart.")
+                    import sys
+                    sys.exit(1)
+            else:
+                # Other runtime errors (e.g. rate limit), just log and continue
+                logger.error(f"API Error (Non-Session): {re}")
+                
         except Exception as e:
             logger.error(f"Error processing {symbol_name}: {e}")
 

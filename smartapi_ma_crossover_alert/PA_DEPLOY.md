@@ -1,21 +1,26 @@
-# Deploying SmartAPI MA Crossover Alert on PythonAnywhere
+# 🚀 Deploying to PythonAnywhere (Hacker Plan)
 
-This guide explains how to deploy your trading bot on [PythonAnywhere](https://www.pythonanywhere.com/).
+This guide walks you through deploying your **SmartAPI MA Crossover Alert** bot to PythonAnywhere using the **Hacker Plan ($5/month)**. 
 
-## Prerequisites
+> [!IMPORTANT]
+> The **Hacker Plan** is required to run "Always-on" tasks. The free plan cannot run this bot continuously every 5 minutes reliably.
 
-1.  **PythonAnywhere Account**:
-    *   **Paid Account (Recommended)**: Required for "Always-on tasks" (continuous monitoring) and to access external APIs if they are not whitelisted.
-    *   **Free Account**: Limited to "Scheduled Tasks" (daily/hourly). Not suitable for 5-minute alerts unless you manually run the script in a console (which will eventually time out).
+---
 
-2.  **Angel One SmartAPI Account**: Ensure you have your API Key, Client ID, Password, and TOTP Secret.
+## 📋 Prerequisites
 
-## Step 1: Upload Code
+1.  **PythonAnywhere Account**: Upgrade to the [Hacker Plan](https://www.pythonanywhere.com/pricing/).
+2.  **Angel One Details**: API Key, Client ID, PIN, TOTP Secret.
+3.  **Telegram Details**: Bot Token, Chat ID.
 
-1.  Log in to PythonAnywhere.
+---
+
+## 🛠️ Step 1: Upload Files
+
+1.  Log in to your PythonAnywhere Dashboard.
 2.  Go to the **Files** tab.
-3.  Create a new directory (e.g., `trading_bot`).
-4.  Upload the following files to this directory:
+3.  Create a new directory named `trading_bot`.
+4.  Inside `trading_bot`, upload the following files from your local computer:
     *   `main.py`
     *   `smartapi_client.py`
     *   `indicators.py`
@@ -23,75 +28,89 @@ This guide explains how to deploy your trading bot on [PythonAnywhere](https://w
     *   `utils.py`
     *   `config.py`
     *   `requirements.txt`
-    *   `requirements.txt`
-    *   **Do NOT upload your local `.env` if it has real keys.** Create a new one on the server securely.
+    *   (Optional) `logs` folder (empty)
 
-## Step 2: Set Up Virtual Environment
+> [!WARNING]
+> **Do NOT upload your local `.env` file.** It contains sensitive passwords. You will create it securely on the server in the next step.
 
-1.  Open a **Bash** console from the Dashboard.
-2.  Navigate to your project directory:
+---
+
+## 🔐 Step 2: Configure Secrets
+
+1.  In the **Files** tab (inside `trading_bot` directory), create a **New File** named `.env`.
+2.  Paste your secrets into the editor:
+    ```ini
+    SMARTAPI_API_KEY=your_actual_api_key_here
+    SMARTAPI_CLIENT_ID=your_client_id_here
+    SMARTAPI_MPIN=your_mpin_here
+    SMARTAPI_TOTP_SECRET=your_totp_secret_here
+    
+    TELEGRAM_BOT_TOKEN=your_bot_token_here
+    TELEGRAM_CHAT_ID=your_chat_id_here
+    ```
+3.  **Save** the file.
+
+---
+
+## 📦 Step 3: Install Dependencies
+
+1.  Open a **Bash** console from the Dashboard (or from the "Consoles" tab).
+2.  Run the following commands one by one:
+
+    **Navigate to folder:**
     ```bash
     cd trading_bot
     ```
-3.  Create a virtual environment:
+
+    **Create Virtual Environment:**
     ```bash
     mkvirtualenv --python=/usr/bin/python3.10 myenv
     ```
-    *(Note: `mkvirtualenv` is a helper on PythonAnywhere. You can also use `python3 -m venv venv`)*
-4.  Install dependencies:
+    *(The console prompt should change to `(myenv) $`)*
+
+    **Install Libraries:**
     ```bash
     pip install -r requirements.txt
     ```
 
-## Step 3: Configure Environment Variables
-
-Ensure your `.env` file is in the same directory as `main.py` and contains:
-
-```ini
-SMARTAPI_API_KEY=your_api_key
-SMARTAPI_CLIENT_ID=your_client_id
-SMARTAPI_PASSWORD=your_password
-SMARTAPI_TOTP_SECRET=your_totp_secret
-TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-```
-
-## Step 4: Run the Bot
-
-### Option A: Always-on Task (Paid Account) - **Recommended**
-
-1.  Go to the **Tasks** tab.
-2.  Scroll to **Always-on tasks**.
-3.  Enter the command to run your script. Make sure to use the python from your virtual environment.
-    *   If you used `mkvirtualenv`:
-        ```bash
-        /home/yourusername/.virtualenvs/myenv/bin/python /home/yourusername/trading_bot/main.py
-        ```
-    *   Replace `yourusername` with your actual PythonAnywhere username.
-4.  Click **Create**.
-5.  The task will start and restart automatically if it crashes. Check the log file (icon next to the task) or `app.log` in the file browser for output.
-
-### Option B: Scheduled Task (Free/Paid)
-
-*Note: Free accounts only support Daily tasks. Paid accounts support Hourly.*
-
-1.  Go to the **Tasks** tab.
-2.  Under **Scheduled tasks**, set the time (e.g., Daily at 09:00 UTC).
-3.  Enter the command with the `--once` flag to run a single scan and exit:
+    **Verify Installation:**
     ```bash
-    /home/yourusername/.virtualenvs/myenv/bin/python /home/yourusername/trading_bot/main.py --once
+    python -c "import pandas; import SmartApi; print('Setup Good!')"
     ```
+    *(If it prints "Setup Good!", you are ready.)*
+
+---
+
+## ⚡ Step 4: Set Up "Always-on" Task
+
+1.  Go to the **Tasks** tab on your Dashboard.
+2.  Scroll down to the **Always-on tasks** section.
+3.  In the "Command" box, enter the following (replace `yourusername` with your *actual* PythonAnywhere username):
+
+    ```bash
+    /home/yourusername/.virtualenvs/myenv/bin/python /home/yourusername/trading_bot/main.py
+    ```
+
+    > [!TIP]
+    > You can find the exact path to your python executable by running `which python` inside your virtualenv console.
+
 4.  Click **Create**.
 
-### Option C: Manual Console (Testing)
+---
 
-1.  Open a **Bash** console.
-2.  Activate virtualenv: `workon myenv`
-3.  Run: `python main.py`
-4.  **Warning**: This will stop if you close the browser tab or if the server restarts.
+## 👀 Step 5: Verify & Monitor
 
-## Troubleshooting
+1.  The task state should change to **Running**.
+2.  Click the **Log** icon (📄) next to the task to see the output.
+    *   You should see logs like: `Initializing SmartAPI...`, `SmartAPI Login Successful`, `Scheduler started...`.
+3.  **That's it!** Your bot handles 5-minute scans automatically.
+    *   **Auto-Healing**: If the bot crashes or the server restarts, PythonAnywhere will automatically restart it.
+    *   **Auto-Login**: The code handles daily session expiry by re-logging in automatically.
 
-*   **Log Files**: Check `app.log` in your project directory for errors.
-*   **Path Issues**: The code has been updated to use absolute paths, so it should find `.env` and `app.log` correctly regardless of how it's run.
-*   **SmartAPI Connection**: If you get connection errors on a Free account, it means Angel One API is not whitelisted. You must upgrade to a paid account.
+---
+
+## ❓ Troubleshooting
+
+*   **"ModuleNotFoundError"**: You probably forgot to install requirements or didn't use the full path to the virtualenv python in the Task command.
+*   **"SmartAPI Login Failed"**: Check your `.env` file credentials.
+*   **Bot stops working after 24h**: The code attempts to auto-relogin. Check the task logs to see if it failed. If it says "Re-login failed", the task will restart itself to try again cleanly.

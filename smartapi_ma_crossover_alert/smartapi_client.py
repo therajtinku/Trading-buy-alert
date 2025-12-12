@@ -60,7 +60,7 @@ class SmartApiClient:
             data = self.smart_api.getCandleData(historicParam)
             logger.info(f"SmartAPI Response: {data}")
             
-            if data and 'data' in data:
+            if data and 'status' in data and data['status'] is True and 'data' in data:
                 # SmartAPI returns: [timestamp, open, high, low, close, volume]
                 df = pd.DataFrame(data['data'], columns=["timestamp", "open", "high", "low", "close", "volume"])
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -68,10 +68,15 @@ class SmartApiClient:
                 
                 # Return all rows
                 return df
+            elif data and 'status' in data and data['status'] is False:
+                # API Limit or Session Expired
+                error_msg = data.get('message', 'Unknown API Error')
+                logger.error(f"SmartAPI Error for {symbol_token}: {error_msg}")
+                raise RuntimeError(f"SmartAPI Error: {error_msg}")
             else:
-                logger.warning(f"No data fetched for token {symbol_token}")
+                logger.warning(f"No data fetched for token {symbol_token} (Response: {data})")
                 return None
 
         except Exception as e:
             logger.error(f"Error fetching candles for {symbol_token}: {e}")
-            return None
+            raise e
