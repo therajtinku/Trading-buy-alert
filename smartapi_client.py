@@ -44,7 +44,7 @@ class SmartApiClient:
             logger.error("API not initialized. Call login() first.")
             return None
 
-        # Calculate time range
+        # Calculate time range (timezone-naive for consistency)
         to_date = datetime.now()
         from_date = to_date - timedelta(days=days)
         
@@ -63,7 +63,8 @@ class SmartApiClient:
             if data and 'status' in data and data['status'] is True and 'data' in data:
                 # SmartAPI returns: [timestamp, open, high, low, close, volume]
                 df = pd.DataFrame(data['data'], columns=["timestamp", "open", "high", "low", "close", "volume"])
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                # Convert to datetime and ensure timezone-naive
+                df['timestamp'] = pd.to_datetime(df['timestamp']).dt.tz_localize(None)
                 df['close'] = df['close'].astype(float)
                 
                 # Return all rows
