@@ -4,7 +4,7 @@ import pandas as pd
 from smartapi_client import SmartApiClient
 from indicators import calculate_sma, detect_bullish_crossover, detect_bearish_crossover
 from telegram_alerts import send_telegram_message
-from utils import get_logger, format_ist_time
+from utils import get_logger, format_ist_time, get_ist_time
 from config import Config
 
 logger = get_logger(__name__)
@@ -26,13 +26,16 @@ def is_market_open():
     """
     Checks if current IST time is between 09:15 and 15:30.
     """
-    now = datetime.now()
-    current_time = now.time()
+    # Use IST time instead of server time (UTC on PythonAnywhere)
+    now_ist = get_ist_time()
+    current_time = now_ist.time()
     start_time = dtime(9, 15)
     end_time = dtime(15, 30)
     
-    # Simple check for now. Ideally should check for weekends/holidays too.
-    return start_time <= current_time <= end_time
+    # Check if it's a weekday (Monday=0, Sunday=6)
+    is_weekday = now_ist.weekday() < 5
+    
+    return is_weekday and start_time <= current_time <= end_time
 
 def job(client):
     if not is_market_open():
@@ -62,7 +65,8 @@ def job(client):
             # If current time is 09:21, the 09:15 candle is confirmed -> Keep it.
             
             from datetime import timedelta
-            current_time = datetime.now()
+            # Use IST time to match the timezone of candle timestamps from SmartAPI
+            current_time = get_ist_time().replace(tzinfo=None)
             
             # Check the last candle
             last_candle = df.iloc[-1]
@@ -140,7 +144,7 @@ def job(client):
         except RuntimeError as re:
             logger.error(f"RuntimeError processing {symbol_name}: {re}")
             # Check for session issues
-            if "Session" in str(re) or "Authorization" in str(re):
+            if "Session" in str(re) or "Authorization" in str(re) or "Invalid Token" in str(re):
                 logger.warning("Session appears invalid. Attempting re-login...")
                 if client.login():
                     logger.info("Re-login successful. Continuing...")
